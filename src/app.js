@@ -111,10 +111,41 @@ app.get('/', (req, res) => {
 
 // Swagger documentation page
 
+const swaggerHtml = swaggerUi
+  .generateHTML(swaggerSpec, {
+    customSiteTitle: 'E-commerce REST API docs'
+  })
+  .replace(
+    './swagger-ui.css',
+    'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0/swagger-ui.css'
+  )
+  .replace(
+    './swagger-ui-bundle.js',
+    'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0/swagger-ui-bundle.js'
+  )
+  .replace(
+    './swagger-ui-standalone-preset.js',
+    'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0/swagger-ui-standalone-preset.js'
+  )
+  .replace(
+    '<script src="./swagger-ui-init.js"> </script>',
+    `<script>
+      window.onload = function () {
+        window.ui = SwaggerUIBundle({
+          spec: ${JSON.stringify(swaggerSpec)},
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+          layout: 'StandaloneLayout'
+        });
+      };
+    </script>`
+  );
+
 app.use(
   '/docs',
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec)
+  (req, res) => res.send(swaggerHtml)
 );
 
 
