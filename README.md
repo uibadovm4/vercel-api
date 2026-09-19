@@ -1,30 +1,33 @@
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,100:0ea5e9&height=180&section=header&text=Commerce%20API&fontSize=52&fontColor=ffffff&fontAlignY=38&desc=Express%20%7C%20SQLite%20%7C%20Vercel&descAlignY=62&descSize=18" alt="Commerce API banner" width="100%" />
+
 # E-commerce REST API
 
-Beginner-friendly Node.js REST API for an e-commerce site. It uses Express, JavaScript, SQLite, JWT authentication, Nodemailer, and Swagger UI.
+**A practical, documented backend for products, carts, orders, ratings, and admin workflows.**
 
-## Run locally
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-16a34a?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-111827?logo=express&logoColor=white)](https://expressjs.com/)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone)
+[![License](https://img.shields.io/badge/license-learning%20project-0ea5e9)](LICENSE)
 
-```bash
-npm install
-copy .env.example .env
-npm run db:seed
-npm run dev
-```
+<br />
 
-Open:
+[Live API](#deploy-to-vercel) · [Interactive docs](#api-docs) · [Local setup](#run-locally)
 
-- API home: http://localhost:3000/
-- Interactive documentation: http://localhost:3000/docs
+</div>
 
-`npm test` runs the smoke test with an in-memory SQLite database.
+## What is inside
 
-## Environment
+| Area | Routes | Purpose |
+| --- | --- | --- |
+| Auth | `/api/auth` | Register, login, and JWT tokens |
+| Catalog | `/api/products`, `/api/categories` | Search, filter, sort, and manage products |
+| Shopping | `/api/cart`, `/api/orders` | Cart operations and order lifecycle |
+| Community | `/api/ratings` | Product ratings and reviews |
+| Operations | `/api/users`, `/api/contact` | User management and contact email |
 
-Copy `.env.example` to `.env` and change `JWT_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`. Contact email requires SMTP settings. For Gmail, create an App Password and use it as `SMTP_PASS`; never send these values to a browser or commit `.env`.
-
-## API overview
-
-All responses use one of these shapes:
+The API returns predictable response envelopes:
 
 ```json
 { "success": true, "data": {} }
@@ -34,29 +37,93 @@ All responses use one of these shapes:
 { "success": false, "message": "Product not found" }
 ```
 
-Use `Authorization: Bearer <token>` for protected routes. The seed command creates an admin account. Admin-only product, category, order-status, and user-management actions require the admin token.
+## API docs
 
-Product listing supports `search`, `category_id`, `min_price`, `max_price`, `sort=price_asc`, and `sort=price_desc`.
+Run the app and open [`/docs`](http://localhost:3000/docs) for the Swagger UI. The root endpoint at [`/`](http://localhost:3000/) reports the API version and available sections.
 
-## Database and Vercel
-
-The schema is in `schema.sql`. The local `data/ecommerce.db` file is created automatically and is ignored by Git. `src/db.js` is a small adapter around SQLite, so a hosted database client can replace it later without rewriting the routes.
-
-Vercel serverless functions do not provide reliable persistent writable disk storage. The local SQLite file is for learning and local development only. Before production deployment, replace the adapter with a hosted SQLite-compatible service such as Turso/libSQL, or another hosted relational database. Keep secrets in Vercel Environment Variables.
-
-The included `vercel.json` exports the Express app from `src/server.js`. Deploy with the Vercel CLI or connect the repository in the Vercel dashboard after moving the database to hosted storage.
-
-## Project structure
+Protected routes use:
 
 ```text
-src/
-  app.js              Express app and route registration
-  server.js           Local listener and Vercel export
-  db.js               SQLite adapter and schema initialization
-  swagger.js          OpenAPI document used by /docs
-  seed.js             Admin bootstrap command
-  middleware/auth.js  JWT authentication and admin authorization
-  routes/             Auth, users, products, categories, cart, orders, ratings, contact
-schema.sql             Relational schema and indexes
-test/                  Local smoke test
+Authorization: Bearer <token>
 ```
+
+## Run locally
+
+Requirements: Node.js 18 or newer.
+
+```bash
+npm install
+cp .env.example .env
+npm run db:seed
+npm run dev
+```
+
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
+
+Useful commands:
+
+```bash
+npm start       # start the API
+npm run dev     # start with Node's watch mode
+npm test        # run the smoke tests
+npm run db:seed # create the admin account and sample data
+```
+
+## Deploy to Vercel
+
+This repository includes a Vercel function entrypoint at `api/index.js` and a rewrite in `vercel.json`.
+
+### One-click setup
+
+1. Push the repository to GitHub.
+2. Import it at [vercel.com/new](https://vercel.com/new).
+3. Keep the detected framework as **Other** and the default build settings.
+4. Add the variables from `.env.example` under **Project Settings -> Environment Variables**.
+5. Deploy, then open `https://your-project.vercel.app/docs`.
+
+### CLI setup
+
+```bash
+npm i -g vercel
+vercel login
+vercel
+vercel --prod
+```
+
+For a production deployment, set a long random `JWT_SECRET`, a strong admin password, and SMTP values in Vercel. Never commit `.env` or paste real credentials into the README.
+
+## Environment variables
+
+Copy `.env.example` to `.env` for local work. `DB_PATH` is optional.
+
+| Variable | Required | Example |
+| --- | --- | --- |
+| `PORT` | Local only | `3000` |
+| `JWT_SECRET` | Yes | long random string |
+| `JWT_EXPIRES_IN` | Yes | `7d` |
+| `DB_PATH` | No | `./data/ecommerce.db` |
+| `CONTACT_EMAIL` | For contact mail | `you@example.com` |
+| `SMTP_HOST` / `SMTP_PORT` | For contact mail | `smtp.gmail.com` / `587` |
+| `SMTP_USER` / `SMTP_PASS` | For contact mail | SMTP account and app password |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Seed command | admin credentials |
+
+## Storage note
+
+Local development uses `data/ecommerce.db`. On Vercel, the default is `/tmp/ecommerce.db`, which is writable but **ephemeral**: data can disappear when the function is recreated. Use a hosted SQLite-compatible service such as Turso/libSQL, or another managed relational database, before using this API for persistent production data.
+
+## Project map
+
+```text
+api/index.js       Vercel function adapter
+src/server.js      Local listener and Vercel export
+src/app.js         Express app and route registration
+src/db.js          sql.js adapter and persistence
+src/seed.js        Admin and sample data bootstrap
+src/routes/        Auth, users, catalog, cart, orders, ratings, contact
+schema.sql         Relational schema and indexes
+test/              Smoke and template tests
+```
+
+## License
+
+This is a learning project. Adapt it to your own security, persistence, observability, and compliance requirements before production use.

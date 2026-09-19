@@ -8,7 +8,11 @@ dotenv.config();
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const projectRoot = root;
-const dbPath = process.env.DB_PATH || path.join(projectRoot, 'data', 'ecommerce.db');
+const dbPath = process.env.DB_PATH || (
+  process.env.VERCEL
+    ? path.join('/tmp', 'ecommerce.db')
+    : path.join(projectRoot, 'data', 'ecommerce.db')
+);
 if (dbPath !== ':memory:') fs.mkdirSync(path.dirname(path.resolve(dbPath)), { recursive: true });
 
 const SQL = await initSqlJs({
