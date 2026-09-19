@@ -1,6 +1,7 @@
 {
   "name": "ecommerce-rest-api",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Beginner-friendly e-commerce REST API with SQLite and Vercel support",
   "type": "module",
   "main": "src/server.js",
