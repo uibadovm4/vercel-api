@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { db } from '../db.js';
+import { fail, ok } from '../utils.js';
+import { requireAuth } from '../middleware/auth.js';
+
+const router = Router();
+router.get('/:productId', (req, res) => ok(res, db.prepare('SELECT r.*, u.name AS user_name FROM ratings r JOIN users u ON u.id = r.user_id WHERE r.product_id = ? ORDER BY r.created_at DESC').all(req.params.productId)));
+router.post('/', requireAuth, (req, res) => { const { product_id: productId, rating, review = '' } = req.body || {}; if (!db.prepare('SELECT id FROM products WHERE id = ?').get(productId)) return fail(res, 'Product not found', 404); if (!Number.isInteger(Number(rating)) || rating < 1 || rating > 5) return fail(res, 'Rating must be an integer from 1 to 5'); const result = db.prepare('INSERT INTO ratings (user_id, product_id, rating, review) VALUES (?, ?, ?, ?)').run(req.user.id, productId, rating, review); return ok(res, db.prepare('SELECT * FROM ratings WHERE id = ?').get(result.lastInsertRowid), 201); });
+router.put('/:id', requireAuth, (req, res) => { const rating = db.prepare('SELECT * FROM ratings WHERE id = ?').get(req.params.id); if (!rating) return fail(res, 'Rating not found', 404); if (rating.user_id !== req.user.id && req.user.role !== 'admin') return fail(res, 'You can only edit your own rating', 403); if (!Number.isInteger(Number(req.body?.rating)) || req.body.rating < 1 || req.body.rating > 5) return fail(res, 'Rating must be an integer from 1 to 5'); db.prepare('UPDATE ratings SET rating = ?, review = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(req.body.rating, req.body.review ?? rating.review, req.params.id); return ok(res, db.prepare('SELECT * FROM ratings WHERE id = ?').get(req.params.id)); });
+router.delete('/:id', requireAuth, (req, res) => { const rating = db.prepare('SELECT * FROM ratings WHERE id = ?').get(req.params.id); if (!rating) return fail(res, 'Rating not found', 404); if (rating.user_id !== req.user.id && req.user.role !== 'admin') return fail(res, 'You can only delete your own rating', 403); db.prepare('DELETE FROM ratings WHERE id = ?').run(req.params.id); return ok(res, { message: 'Rating deleted' }); });
+export default router;
