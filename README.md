@@ -92,6 +92,20 @@ vercel --prod
 
 For a production deployment, set a long random `JWT_SECRET`, a strong admin password, and SMTP values in Vercel. Never commit `.env` or paste real credentials into the README.
 
+### Enable contact email
+
+The contact endpoint returns `503` until all four email variables are configured for the **Production** environment:
+
+```text
+SMTP_HOST
+SMTP_PORT
+SMTP_USER
+SMTP_PASS
+CONTACT_EMAIL
+```
+
+In Vercel, open **Project Settings -> Environment Variables**, add or edit each value with **Production** selected, then redeploy. Gmail requires an App Password, not the normal account password. After changing a variable, deploy again with `npx vercel --prod`.
+
 ## Environment variables
 
 Copy `.env.example` to `.env` for local work. `DB_PATH` is optional.
